@@ -1,2 +1,0 @@
-#Add Devices to a Specific Collection
-Get-Content "C:\Add_to_Collection.txt" | foreach { Add-CMDeviceCollectionDirectMembershipRule -CollectionName "Collection_Name" -ResourceID (Get-CMDevice -Name $_).ResourceID }
