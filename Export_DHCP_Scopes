@@ -1,0 +1,50 @@
+Import-Module DhcpServer
+
+# Set the DHCP server name
+$dhcpServer = "YourServerName"
+
+# Retrieve all DHCP scopes
+$scopes = Get-DhcpServerv4Scope -ComputerName $dhcpServer
+
+# Create an empty array to hold the results
+$results = @()
+
+# Loop through each DHCP scope
+foreach ($scope in $scopes) {
+    # Retrieve all DHCP leases for the current scope
+    $leases = Get-DhcpServerv4Lease -ComputerName $dhcpServer -ScopeId $scope.ScopeId
+    
+    # Retrieve all DHCP reservations for the current scope
+    $reservations = Get-DhcpServerv4Reservation -ComputerName $dhcpServer -ScopeId $scope.ScopeId
+    
+    # Loop through each DHCP lease and add it to the results array
+    foreach ($lease in $leases) {
+        $result = [PSCustomObject]@{
+            ScopeName = $scope.Name
+            ScopeID = $scope.ScopeId.IPAddressToString
+            LeaseIPAddress = $lease.IPAddress.IPAddressToString
+            LeaseHostName = $lease.HostName
+            LeaseClientID = $lease.ClientId
+            LeaseExpires = $lease.Expires
+            LeaseType = "Lease"
+        }
+        $results += $result
+    }
+    
+    # Loop through each DHCP reservation and add it to the results array
+    foreach ($reservation in $reservations) {
+        $result = [PSCustomObject]@{
+            ScopeName = $scope.Name
+            ScopeID = $scope.ScopeId.IPAddressToString
+            LeaseIPAddress = $reservation.IPAddress.IPAddressToString
+            LeaseHostName = $reservation.ClientName
+            LeaseClientID = $reservation.ClientId
+            LeaseExpires = $null
+            LeaseType = "Reservation"
+        }
+        $results += $result
+    }
+}
+
+# Export the results to a CSV file
+$results | Export-Csv -Path "C:\DHCP-Scopes-Leases-Reservations.csv" -NoTypeInformation
